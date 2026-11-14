@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bola do Bairro</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout: faixa verde de relvado no topo com o próximo fim de semana; abaixo, separadores e cartões de jogo com marcador de data tipo bilhete */
+  --bg: #F2F5F1;
+  --surface: #FFFFFF;
+  --ink: #13201A;
+  --muted: #566259;
+  --line: #D5DDD4;
+  --accent: #0A7C4A;
+  --on-accent: #FFFFFF;
+  --accent-soft: #DCEFE4;
+  --warn: #8A5700;
+  --warn-soft: #FBEBC6;
+  --bad: #B3261E;
+  --bad-soft: #F8DDDA;
+  --pitch: #0C3A28;
+  --on-pitch: #F1F7F2;
+  --pitch-line: rgba(241, 247, 242, 0.16);
+  --f-display: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
+  --f-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1512; --surface: #16201B; --ink: #E8EFEA; --muted: #98A69D; --line: #27352D;
+    --accent: #3DC083; --on-accent: #06150E; --accent-soft: #143325;
+    --warn: #E8B04A; --warn-soft: #3A2D10; --bad: #F2877F; --bad-soft: #3B1A18;
+    --pitch: #0A2418; --on-pitch: #F1F7F2; --pitch-line: rgba(241, 247, 242, 0.12);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1512; --surface: #16201B; --ink: #E8EFEA; --muted: #98A69D; --line: #27352D;
+  --accent: #3DC083; --on-accent: #06150E; --accent-soft: #143325;
+  --warn: #E8B04A; --warn-soft: #3A2D10; --bad: #F2877F; --bad-soft: #3B1A18;
+  --pitch: #0A2418; --on-pitch: #F1F7F2; --pitch-line: rgba(241, 247, 242, 0.12);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.45 var(--f-body); -webkit-text-size-adjust: 100%; }
+h1, h2, h3, p, ul { margin: 0; padding: 0; }
+ul { list-style: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.wrap { max-width: 720px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* faixa do relvado */
+.band { position: relative; overflow: hidden; background: var(--pitch); color: var(--on-pitch); }
+.band::before { content: ""; position: absolute; top: 0; bottom: 0; right: 46px; width: 2px; background: var(--pitch-line); }
+.band::after { content: ""; position: absolute; top: 50%; right: -14px; width: 120px; height: 120px; margin-top: -60px; border: 2px solid var(--pitch-line); border-radius: 50%; }
+.band .wrap { position: relative; z-index: 1; padding-block: 20px 22px; }
+.eyebrow { font-size: 12.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.8; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: 40px; line-height: 1; text-transform: uppercase; letter-spacing: 0.02em; margin-top: 6px; }
+.wk { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.wk strong { font-family: var(--f-display); font-weight: 600; font-size: 25px; letter-spacing: 0.02em; }
+.wk span { font-size: 14.5px; opacity: 0.88; }
+
+.main { padding-block: 18px 32px; display: grid; gap: 16px; }
+
+/* atenção */
+.att h2, .sec-h { font-family: var(--f-display); font-weight: 600; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.att ul { display: grid; gap: 6px; margin-top: 8px; }
+.att button { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 44px; }
+.dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--warn); }
+.dot.bad { background: var(--bad); }
+.att .chev { margin-left: auto; color: var(--muted); }
+.allok { margin-top: 8px; font-size: 14.5px; color: var(--muted); }
+
+/* separadores */
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); }
+.tab { background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 2px 8px; font-family: var(--f-display); font-weight: 600; font-size: 18px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); min-height: 44px; margin-bottom: -1px; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.cnt { display: inline-block; margin-left: 5px; min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-family: var(--f-body); font-size: 12px; font-weight: 600; letter-spacing: 0; line-height: 20px; }
+
+.panel { display: grid; gap: 12px; }
+.bar-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; min-height: 36px; font-size: 14.5px; font-weight: 500; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 15px; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.sm { min-height: 36px; padding: 6px 12px; font-size: 14px; }
+.btn.bad { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+.btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+.link { background: none; border: 0; padding: 4px 0; color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; font-size: 14px; min-height: 32px; }
+
+.day-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-top: 6px; }
+.day-h h2 { font-family: var(--f-display); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; text-transform: capitalize; }
+.day-h span { font-size: 14px; color: var(--muted); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.dt { flex: none; width: 56px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; text-align: center; background: var(--surface); }
+.dt b { display: block; background: var(--pitch); color: var(--on-pitch); font-family: var(--f-display); font-weight: 600; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; line-height: 20px; }
+.dt i { display: block; font-style: normal; font-family: var(--f-display); font-weight: 700; font-size: 28px; line-height: 1.05; padding-top: 3px; }
+.dt u { display: block; text-decoration: none; font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding-bottom: 4px; }
+
+.chal { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px 14px; padding: 14px; }
+.chal h3, .game h3 { font-family: var(--f-display); font-weight: 700; font-size: 22px; line-height: 1.15; letter-spacing: 0.01em; }
+.meta { font-size: 14.5px; color: var(--muted); margin-top: 2px; }
+.note { font-size: 14.5px; margin-top: 6px; }
+.fpline { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fp { width: 64px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; flex: none; }
+.fp span { display: block; height: 100%; background: var(--accent); }
+.chal-act { grid-column: 1 / -1; }
+.chal-act .btn { width: 100%; }
+@media (min-width: 560px) {
+  .chal { grid-template-columns: 56px minmax(0, 1fr) auto; }
+  .chal-act { grid-column: auto; align-self: center; }
+  .chal-act .btn { width: auto; }
+}
+
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; background: var(--line); color: var(--ink); white-space: nowrap; }
+.pill.ok { background: var(--accent-soft); color: var(--accent); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+
+/* jogos */
+.game { padding: 14px; display: grid; gap: 12px; }
+.gh { display: flex; gap: 14px; align-items: flex-start; }
+.gh > div:last-child { min-width: 0; flex: 1; }
+.gh .pill { margin-bottom: 6px; }
+.rows { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 4px 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.row .ic { grid-row: 1; display: flex; padding-top: 1px; }
+.row .rt p { font-size: 15px; }
+.row .rt .sub { font-size: 13.5px; color: var(--muted); margin-top: 1px; }
+.row .ra { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.t-ok .ic { color: var(--accent); }
+.t-wait .ic { color: var(--muted); }
+.t-warn .ic { color: var(--warn); }
+.t-bad .ic { color: var(--bad); }
+.meter { height: 6px; border-radius: 3px; background: var(--line); margin-top: 6px; overflow: hidden; }
+.meter span { display: block; height: 100%; background: var(--accent); }
+.meter.low span { background: var(--warn); }
+.gf { display: flex; flex-wrap: wrap; gap: 8px; }
+.sel { min-height: 40px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 10px; max-width: 100%; }
+
+.roster { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; padding: 10px 0 2px; }
+.pl { display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 4px 4px 4px 10px; min-width: 0; }
+.pl span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seg { display: flex; flex: none; }
+.seg button { border: 1px solid var(--line); background: var(--surface); padding: 4px 10px; min-height: 34px; font-size: 13.5px; font-weight: 600; }
+.seg button:first-child { border-radius: 6px 0 0 6px; }
+.seg button:last-child { border-radius: 0 6px 6px 0; margin-left: -1px; }
+.seg button[aria-pressed="true"].y { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.seg button[aria-pressed="true"].n { background: var(--bad); color: var(--surface); border-color: var(--bad); }
+
+.paybox, .cancelbox { border-radius: 8px; padding: 10px 12px; font-size: 14.5px; display: grid; gap: 8px; }
+.paybox { background: var(--accent-soft); }
+.cancelbox { background: var(--bad-soft); }
+.paybox .gf, .cancelbox .gf { gap: 6px; }
+
+/* formulário */
+.form { padding: 14px; display: grid; gap: 12px; }
+.form h2 { font-family: var(--f-display); font-weight: 700; font-size: 22px; letter-spacing: 0.02em; text-transform: uppercase; }
+.hint { font-size: 14px; color: var(--muted); }
+.fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.form label { display: grid; gap: 4px; font-size: 13.5px; font-weight: 600; color: var(--muted); min-width: 0; }
+.form input, .form select { min-height: 42px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; padding: 6px 10px; width: 100%; font-weight: 400; }
+.err { font-size: 14px; color: var(--bad); font-weight: 600; }
+.fa { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* campos e equipas */
+.field { padding: 14px; display: grid; gap: 8px; }
+.field h3, .team h3 { font-family: var(--f-display); font-weight: 700; font-size: 21px; line-height: 1.15; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.team { padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; }
+.team > div:first-child { min-width: 0; flex: 1 1 200px; }
+.me-tag { margin-left: 6px; }
+
+.copybox { padding: 12px 14px; display: grid; gap: 8px; }
+.copybox textarea { width: 100%; min-height: 130px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); padding: 8px 10px; resize: vertical; }
+.empty { padding: 22px 16px; text-align: center; color: var(--muted); font-size: 15px; display: grid; gap: 10px; justify-items: center; }
+.foot { font-size: 13.5px; color: var(--muted); display: grid; gap: 8px; padding-top: 6px; }
+
+.toasts { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 6px; justify-items: center; pointer-events: none; z-index: 20; }
+.toast { pointer-events: auto; max-width: 440px; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 10px 14px; font-size: 14.5px; font-weight: 500; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25); animation: tin 0.18s ease-out; }
+@keyframes tin { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+@media (max-width: 420px) { h1 { font-size: 34px; } .tab { font-size: 16px; } .band::before, .band::after { opacity: 0.6; } }
+</style>
+
+</head>
+<body>
+<div id="app"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'bola-do-bairro-v1';
+  var DOW = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  var DOW_L = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+  var MON = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  var ESC = ['Juniores', 'Veteranos', 'Legends'];
+  var PLAYERS = ['Armando', 'Celso', 'Dinis', 'Eduardo', 'Fernando', 'Gil', 'Hélder', 'Isidro', 'Jaime', 'Lázaro', 'Mateus', 'Nelson', 'Osvaldo', 'Paulo'];
+
+  var ME = { id: 'me', name: 'Legends Unidade 7', bairro: 'Unidade 7', escalao: 'Legends', fair: 4.7, jogos: 23, faltas: 0 };
+  var TEAMS = [
+    ME,
+    { id: 't1', name: 'Veteranos do Aeroporto', bairro: 'Aeroporto', escalao: 'Veteranos', fair: 4.5, jogos: 31, faltas: 1 },
+    { id: 't2', name: 'Chamanculo Old Stars', bairro: 'Chamanculo', escalao: 'Legends', fair: 4.2, jogos: 18, faltas: 2 },
+    { id: 't3', name: 'Zixaxa Unidos', bairro: 'Zixaxa', escalao: 'Juniores', fair: 4.8, jogos: 12, faltas: 0 },
+    { id: 't4', name: 'Malhangalene FC', bairro: 'Malhangalene', escalao: 'Veteranos', fair: 4.0, jogos: 26, faltas: 3 },
+    { id: 't5', name: 'Alto-Maé Seniors', bairro: 'Alto-Maé', escalao: 'Legends', fair: 4.4, jogos: 15, faltas: 1 },
+    { id: 't6', name: 'Mafalala Veteranos', bairro: 'Mafalala', escalao: 'Veteranos', fair: 4.6, jogos: 29, faltas: 1 }
+  ];
+  var FIELDS = {
+    vet: { id: 'vet', name: 'Faculdade de Veterinária', zona: 'Unidade 7', custo: 0, antecipado: false, autoriza: 'Direcção da faculdade', aviso: 'Pedir autorização com 3 dias de antecedência.' },
+    zixaxa: { id: 'zixaxa', name: 'Campo de Zixaxa (Vulcano)', zona: 'Zixaxa', custo: 1500, antecipado: true, autoriza: 'Responsável do campo', aviso: 'Pagamento até 2 dias antes do jogo.' },
+    fa: { id: 'fa', name: 'Campo da Força Aérea', zona: 'Aeroporto', custo: 0, antecipado: false, autoriza: 'Comando da unidade', aviso: 'Usado nos jogos com o Aeroporto.' },
+    lhanguene: { id: 'lhanguene', name: 'Escola Secundária de Lhanguene', zona: 'Chamanculo', custo: 500, antecipado: false, autoriza: 'Direcção da escola', aviso: 'Taxa paga no dia, ao responsável.' },
+    tbd: { id: 'tbd', name: 'Campo a combinar', zona: '', custo: 0, antecipado: false, autoriza: '', aviso: '' }
+  };
+  var FIELD_LIST = ['vet', 'zixaxa', 'fa', 'lhanguene'];
+
+  /* datas */
+  function z(n) { return String(n).padStart(2, '0'); }
+  function iso(d) { return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); }
+  function parse(s) { var p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function today() { var d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function addDays(d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; }
+  function diff(a, b) { return Math.round((a - b) / 86400000); }
+  function nextSat() { var t = today(); var n = (6 - t.getDay() + 7) % 7; return addDays(t, n === 0 ? 7 : n); }
+  function short(d) { return DOW[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()]; }
+  function long(d) { return DOW_L[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()]; }
+  function rel(n) { return n === 0 ? 'hoje' : n === 1 ? 'amanhã' : n < 0 ? 'já passou' : 'em ' + n + ' dias'; }
+  function mt(n) { return n.toLocaleString('pt-PT') + ' MT'; }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function uid() { return 'x' + Math.random().toString(36).slice(2, 8); }
+  function team(id) { return TEAMS.filter(function (t) { return t.id === id; })[0]; }
+  function fp(n) { return n.toFixed(1).replace('.', ','); }
+  function falta(n) { return n + (n === 1 ? ' falta' : ' faltas'); }
+
+  /* estado */
+  function seed() {
+    var sat = nextSat(), sun = addDays(sat, 1), rs = {};
+    PLAYERS.forEach(function (p, i) { if (i < 8) rs[p] = 'sim'; else if (i < 10) rs[p] = 'nao'; });
+    return {
+      v: 1, tab: 'desafios', fD: 'Todos', fE: 'Todos', meFaltas: 0,
+      games: [
+        { id: 'g1', opp: 'Mafalala Veteranos', oppBairro: 'Mafalala', date: iso(sat), time: '15:30', field: 'zixaxa', status: 'confirmado', auth: true, oppPaid: true, myPaid: null, rsvp: rs },
+        { id: 'g2', opp: '', oppBairro: '', date: iso(sun), time: '10:00', field: 'vet', status: 'aberto', escalao: 'Legends', note: '', auth: false, oppPaid: false, myPaid: null, rsvp: {} }
+      ],
+      challenges: [
+        { id: 'c1', team: 't1', date: iso(addDays(sat, 7)), time: '15:00', field: 'fa', note: 'Jogo no campo deles. Levar coletes.' },
+        { id: 'c2', team: 't2', date: iso(sun), time: '09:30', field: 'lhanguene', note: 'Procuramos adversário para domingo de manhã.' },
+        { id: 'c3', team: 't3', date: iso(sat), time: '10:00', field: 'zixaxa', note: '' },
+        { id: 'c4', team: 't4', date: iso(addDays(sat, 8)), time: '10:00', field: 'tbd', note: 'Campo por combinar. Aceitamos sugestões.' },
+        { id: 'c5', team: 't5', date: iso(addDays(sat, 14)), time: '16:00', field: 'tbd', note: '' }
+      ]
+    };
+  }
+  var state;
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw) { var s = JSON.parse(raw); if (s && s.v === 1) return s; } } catch (e) {}
+    return seed();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  state = load();
+  ME.faltas = state.meFaltas || 0;
+
+  var ui = { form: { open: false, target: null }, draft: {}, err: '', pay: {}, roster: {}, cancel: {}, box: null };
+  var app = document.getElementById('app');
+  var toasts = document.getElementById('toasts');
+
+  function toast(msg) {
+    var el = document.createElement('div');
+    el.className = 'toast'; el.textContent = msg;
+    toasts.appendChild(el);
+    setTimeout(function () { el.remove(); }, 3400);
+  }
+
+  /* regras */
+  function count(g) { return PLAYERS.filter(function (p) { return g.rsvp && g.rsvp[p] === 'sim'; }).length; }
+  function share(f) { return Math.ceil(f.custo / 2); }
+  function payDue(g) { return addDays(parse(g.date), -2); }
+  function nDays(g) { return diff(parse(g.date), today()); }
+
+  /* ícones */
+  function ic(tone) {
+    var p = tone === 'ok' ? '<circle cx="10" cy="10" r="8.5"/><path d="M6 10.4l2.6 2.6L14 7.6"/>'
+      : tone === 'wait' ? '<circle cx="10" cy="10" r="8.5"/><path d="M10 5.5V10l3 2"/>'
+      : '<circle cx="10" cy="10" r="8.5"/><path d="M10 5.5v5.2M10 13.6v.1"/>';
+    var lab = { ok: 'Feito', wait: 'Pendente', warn: 'Atenção', bad: 'Urgente' }[tone];
+    return '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg><span class="sr">' + lab + '. </span>';
+  }
+  function row(tone, text, sub, action) {
+    return '<li class="row t-' + tone + '"><span class="ic">' + ic(tone) + '</span><div class="rt"><p>' + text + '</p>' + (sub ? '<p class="sub">' + sub + '</p>' : '') + '</div>' + (action ? '<div class="ra">' + action + '</div>' : '') + '</li>';
+  }
+  function dtile(d) { return '<div class="dt" aria-hidden="true"><b>' + DOW[d.getDay()] + '</b><i>' + d.getDate() + '</i><u>' + MON[d.getMonth()] + '</u></div>'; }
+
+  /* cabeçalho */
+  function header() {
+    var sat = nextSat(), sun = addDays(sat, 1);
+    var same = sat.getMonth() === sun.getMonth();
+    var label = 'Sáb ' + sat.getDate() + (same ? '' : ' ' + MON[sat.getMonth()]) + ' – Dom ' + sun.getDate() + ' ' + MON[sun.getMonth()];
+    var wk = state.games.filter(function (g) { return g.date === iso(sat) || g.date === iso(sun); });
+    var closed = wk.filter(function (g) { return g.status === 'confirmado'; }).length;
+    var open = wk.length - closed;
+    var n = diff(sat, today());
+    return '<header class="band"><div class="wrap"><p class="eyebrow">' + esc(ME.name) + '</p><h1>Bola do Bairro</h1>' +
+      '<div class="wk"><strong>' + label + '</strong><span>Próximo fim de semana, ' + rel(n) + ' · ' + closed + (closed === 1 ? ' jogo marcado' : ' jogos marcados') + ' · ' + open + ' por fechar</span></div></div></header>';
+  }
+
+  /* atenção */
+  function attention() {
+    var items = [];
+    state.games.forEach(function (g) {
+      var n = nDays(g), f = FIELDS[g.field] || FIELDS.tbd, d = parse(g.date);
+      if (n < 0) return;
+      if (g.status === 'aberto' && n <= 10) items.push({ tone: 'warn', tab: 'jogos', text: long(d) + ' ainda sem adversário. Faltam ' + n + ' dias.' });
+      if (g.status === 'confirmado') {
+        if (f.custo > 0 && f.antecipado && !g.myPaid) {
+          var due = n - 2;
+          if (due <= 5) items.push({ tone: due <= 1 ? 'bad' : 'warn', tab: 'jogos', text: 'Pagar ' + mt(share(f)) + ' ao ' + f.name + ' até ' + short(payDue(g)) + ' (' + rel(Math.max(due, 0)) + ').' });
+        }
+        var c = count(g);
+        if (c < 11 && n <= 7) items.push({ tone: n <= 3 ? 'bad' : 'warn', tab: 'jogos', text: 'Jogo de ' + long(d) + ': ' + c + ' de 11 confirmados.' });
+      }
+    });
+    if (!items.length) return '<section class="att"><h2>Precisa de atenção</h2><p class="allok">Tudo em dia. Sem pagamentos a vencer nem jogos por preencher.</p></section>';
+    return '<section class="att"><h2>Precisa de atenção</h2><ul>' + items.slice(0, 4).map(function (it) {
+      return '<li><button type="button" data-act="tab" data-id="' + it.tab + '"><span class="dot ' + (it.tone === 'bad' ? 'bad' : '') + '"></span><span>' + esc(it.text) + '</span><span class="chev" aria-hidden="true">›</span></button></li>';
+    }).join('') + '</ul></section>';
+  }
+
+  function tabs() {
+    var items = [['desafios', 'Desafios', state.challenges.length], ['jogos', 'Meus jogos', state.games.length], ['campos', 'Campos', 0], ['equipas', 'Equipas', 0]];
+    return '<div class="tabs" role="tablist" aria-label="Secções">' + items.map(function (t) {
+      return '<button type="button" role="tab" class="tab" aria-selected="' + (state.tab === t[0]) + '" data-act="tab" data-id="' + t[0] + '">' + t[1] + (t[2] ? '<span class="cnt">' + t[2] + '</span>' : '') + '</button>';
+    }).join('') + '</div>';
+  }
+
+  function chips(list, cur, act) {
+    return '<div class="chips" role="group" aria-label="Filtrar por escalão">' + list.map(function (v) {
+      return '<button type="button" class="chip" aria-pressed="' + (cur === v) + '" data-act="' + act + '" data-id="' + esc(v) + '">' + esc(v) + '</button>';
+    }).join('') + '</div>';
+  }
+
+  /* formulário */
+  function dv(k, def) { return ui.draft[k] !== undefined ? ui.draft[k] : def; }
+  function formHtml() {
+    var t = ui.form.target ? team(ui.form.target) : null;
+    var minD = iso(addDays(today(), 1)), defD = iso(addDays(nextSat(), 7));
+    var fld = dv('field', 'tbd'), esc_ = dv('esc', ME.escalao);
+    var fopts = FIELD_LIST.concat(['tbd']).map(function (id) { return '<option value="' + id + '"' + (fld === id ? ' selected' : '') + '>' + esc(FIELDS[id].name) + '</option>'; }).join('');
+    var eopts = ESC.map(function (e) { return '<option' + (esc_ === e ? ' selected' : '') + '>' + e + '</option>'; }).join('');
+    return '<form id="chForm" class="card form" novalidate>' +
+      '<h2>' + (t ? 'Convidar ' + esc(t.name) : 'Publicar desafio') + '</h2>' +
+      '<p class="hint">' + (t ? 'O convite vai directo para esta equipa. Ela aceita, recusa ou propõe outra data.' : 'O desafio aparece no mural para as outras equipas. Publica com a maior antecedência possível.') + '</p>' +
+      '<div class="fgrid">' +
+      '<label for="f-date">Data<input id="f-date" name="date" type="date" min="' + minD + '" value="' + esc(dv('date', defD)) + '"></label>' +
+      '<label for="f-time">Hora<input id="f-time" name="time" type="time" value="' + esc(dv('time', '15:00')) + '"></label>' +
+      (t ? '' : '<label for="f-esc">Escalão<select id="f-esc" name="esc">' + eopts + '</select></label>') +
+      '<label for="f-field">Campo<select id="f-field" name="field">' + fopts + '</select></label></div>' +
+      '<label for="f-note">Nota (opcional)<input id="f-note" name="note" type="text" maxlength="120" value="' + esc(dv('note', '')) + '" placeholder="Ex.: levar coletes, jogo de 40 minutos"></label>' +
+      (ui.err ? '<p class="err" role="alert">' + esc(ui.err) + '</p>' : '') +
+      '<div class="fa"><button class="btn" type="submit">' + (t ? 'Enviar convite' : 'Publicar no mural') + '</button><button type="button" class="btn ghost" data-act="closeform">Cancelar</button></div></form>';
+  }
+
+  /* painel: desafios */
+  function panelDesafios() {
+    var list = state.challenges.filter(function (c) { return state.fD === 'Todos' || team(c.team).escalao === state.fD; })
+      .sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : a.time < b.time ? -1 : 1; });
+    var h = '<div class="bar-tools">' + chips(['Todos'].concat(ESC), state.fD, 'fD') +
+      '<button type="button" class="btn sm" data-act="openform">Publicar desafio</button></div>';
+    if (ui.form.open && !ui.form.target) h += formHtml();
+    if (ui.form.open && ui.form.target) h += formHtml();
+    if (!list.length) return h + '<div class="card empty"><p>Nenhum desafio para este escalão.</p><button type="button" class="btn sm" data-act="openform">Publicar o teu desafio</button></div>';
+    var last = '';
+    list.forEach(function (c) {
+      var t = team(c.team), f = FIELDS[c.field] || FIELDS.tbd, d = parse(c.date);
+      if (c.date !== last) {
+        var same = list.filter(function (x) { return x.date === c.date; }).length;
+        h += '<div class="day-h"><h2>' + esc(long(d)) + '</h2><span>' + rel(diff(d, today())) + ' · ' + same + (same === 1 ? ' desafio' : ' desafios') + '</span></div>';
+        last = c.date;
+      }
+      var busy = state.games.some(function (g) { return g.date === c.date && g.status === 'confirmado'; });
+      var fills = state.games.some(function (g) { return g.date === c.date && g.status === 'aberto'; });
+      h += '<article class="card chal">' + dtile(d) + '<div><h3>' + esc(t.name) + '</h3>' +
+        '<p class="meta">' + esc(t.bairro) + ' · ' + esc(t.escalao) + ' · ' + esc(c.time) + ' · ' + esc(f.name) + '</p>' +
+        (c.note ? '<p class="note">' + esc(c.note) + '</p>' : '') +
+        '<div class="fpline"><span class="fp"><span style="width:' + Math.round(t.fair / 5 * 100) + '%"></span></span><span>Fair-play ' + fp(t.fair) + ' · ' + falta(t.faltas) + '</span></div></div>' +
+        '<div class="chal-act">' + (busy ? '<button type="button" class="btn ghost" disabled>Dia ocupado</button>' : '<button type="button" class="btn" data-act="accept" data-id="' + c.id + '">' + (fills ? 'Aceitar e fechar o meu jogo' : 'Aceitar desafio') + '</button>') + '</div></article>';
+    });
+    return h;
+  }
+
+  /* painel: meus jogos */
+  function gameCard(g) {
+    var f = FIELDS[g.field] || FIELDS.tbd, d = parse(g.date), n = nDays(g);
+    var pill, body = '', actions = '';
+    var title = g.status === 'aberto' ? 'Sem adversário' : 'vs ' + esc(g.opp);
+    var meta = short(d) + ' · ' + esc(g.time) + ' · ' + esc(f.name);
+    if (g.status === 'aberto') {
+      pill = '<span class="pill warn">Sem adversário</span>';
+      var comp = state.challenges.filter(function (c) { return c.date === g.date; }).length;
+      body = '<ul class="rows">' + row(n <= 6 ? 'bad' : 'warn', 'Publicado no mural para ' + esc(g.escalao || ME.escalao) + '. Faltam ' + n + ' dias.', g.note ? esc(g.note) : '', comp ? '<button type="button" class="link" data-act="seefor">Há ' + comp + (comp === 1 ? ' desafio' : ' desafios') + ' para este dia</button>' : '') + '</ul>';
+      actions = '<button type="button" class="btn ghost sm" data-act="withdraw" data-id="' + g.id + '">Retirar do mural</button>';
+      title = esc(long(d));
+      meta = esc(g.time) + ' · ' + esc(f.name);
+    } else if (g.status === 'convite') {
+      pill = '<span class="pill">Convite enviado</span>';
+      body = '<ul class="rows">' + row('wait', 'À espera da resposta de ' + esc(g.opp) + '.', 'Neste protótipo a resposta é simulada.', '') + '</ul>';
+      actions = '<button type="button" class="btn sm" data-act="sim" data-id="' + g.id + '">Simular aceitação</button><button type="button" class="btn ghost sm" data-act="withdraw" data-id="' + g.id + '">Cancelar convite</button>';
+    } else {
+      var rows = row('ok', esc(g.opp) + ' (' + esc(g.oppBairro) + ') confirmado', '', '');
+      var c = count(g), fieldOk = g.field !== 'tbd', payOk = f.custo === 0 || !!g.myPaid;
+      if (!fieldOk) {
+        rows += row('wait', 'Campo por definir', '', '<select class="sel" id="sf-' + g.id + '" data-sf="' + g.id + '" aria-label="Escolher campo"><option value="">Escolher campo</option>' + FIELD_LIST.map(function (id) { return '<option value="' + id + '">' + esc(FIELDS[id].name) + '</option>'; }).join('') + '</select>');
+      } else if (g.auth) {
+        rows += row('ok', 'Autorização obtida', esc(f.autoriza) + '. ' + esc(f.aviso), '<button type="button" class="link" data-act="unauth" data-id="' + g.id + '">Desfazer</button>');
+      } else {
+        rows += row(n <= 3 ? 'warn' : 'wait', 'Falta autorização de ' + esc(f.autoriza), esc(f.aviso), '<button type="button" class="btn sm" data-act="auth" data-id="' + g.id + '">Já temos autorização</button><button type="button" class="link" data-act="copyreq" data-id="' + g.id + '">Copiar pedido</button>');
+      }
+      if (fieldOk) {
+        if (f.custo === 0) rows += row('ok', 'Sem custo neste campo', '', '');
+        else if (g.myPaid) rows += row('ok', 'Pagaste ' + mt(share(f)) + ' por ' + esc(g.myPaid), 'Adversário: ' + (g.oppPaid ? 'já pagou' : 'por pagar'), '<button type="button" class="link" data-act="unpay" data-id="' + g.id + '">Desfazer</button>');
+        else {
+          var due = n - 2, tone = f.antecipado ? (due <= 1 ? 'bad' : due <= 3 ? 'warn' : 'wait') : 'wait';
+          var txt = f.antecipado ? 'Pagar ' + mt(share(f)) + ' até ' + short(payDue(g)) + ' (' + rel(Math.max(due, 0)) + ')' : 'Pagar ' + mt(share(f)) + ' no dia do jogo';
+          rows += row(tone, txt, 'Total do campo ' + mt(f.custo) + ', dividido por duas equipas. Adversário: ' + (g.oppPaid ? 'já pagou' : 'por pagar'), '<button type="button" class="btn sm" data-act="pay" data-id="' + g.id + '">Registar pagamento</button>');
+          if (ui.pay[g.id]) rows += '<li class="paybox" style="list-style:none"><p>Como pagaste? O registo é manual. O pagamento digital entra numa fase seguinte.</p><div class="gf"><button type="button" class="btn sm" data-act="paid" data-id="' + g.id + '" data-m="M-Pesa">M-Pesa</button><button type="button" class="btn sm" data-act="paid" data-id="' + g.id + '" data-m="e-Mola">e-Mola</button><button type="button" class="btn sm" data-act="paid" data-id="' + g.id + '" data-m="dinheiro">Dinheiro</button></div></li>';
+        }
+      }
+      var ptone = c >= 11 ? 'ok' : n <= 3 ? 'bad' : n <= 7 ? 'warn' : 'wait';
+      rows += row(ptone, c + ' de 11 confirmados' + (c < 11 ? '. Faltam ' + (11 - c) : ''), '<span class="meter' + (c < 11 ? ' low' : '') + '" style="display:block"><span style="width:' + Math.min(100, Math.round(c / 11 * 100)) + '%"></span></span>', '<button type="button" class="btn ghost sm" data-act="roster" data-id="' + g.id + '" aria-expanded="' + !!ui.roster[g.id] + '">' + (ui.roster[g.id] ? 'Fechar plantel' : 'Ver plantel') + '</button>');
+      if (ui.roster[g.id]) rows += '<li style="list-style:none"><div class="roster">' + PLAYERS.map(function (p) {
+        var v = g.rsvp[p];
+        return '<div class="pl"><span>' + esc(p) + '</span><div class="seg" role="group" aria-label="Presença de ' + esc(p) + '"><button type="button" class="y" aria-pressed="' + (v === 'sim') + '" data-act="rsvp" data-id="' + g.id + '" data-p="' + esc(p) + '" data-v="sim">Vou</button><button type="button" class="n" aria-pressed="' + (v === 'nao') + '" data-act="rsvp" data-id="' + g.id + '" data-p="' + esc(p) + '" data-v="nao">Não vou</button></div></div>';
+      }).join('') + '</div></li>';
+      var ready = fieldOk && g.auth && payOk && c >= 11;
+      pill = ready ? '<span class="pill ok">Tudo pronto</span>' : '<span class="pill warn">A preparar</span>';
+      body = '<ul class="rows">' + rows + '</ul>';
+      actions = '<button type="button" class="btn ghost sm" data-act="copymsg" data-id="' + g.id + '">Copiar mensagem para o grupo</button><button type="button" class="btn ghost sm" data-act="cancel" data-id="' + g.id + '">Desistir do jogo</button>';
+      if (ui.cancel[g.id]) body += '<div class="cancelbox"><p>' + (n <= 2 ? 'Desistir com menos de 48 horas conta como falta na vossa reputação. ' : 'Desistir com tempo dá ao adversário a hipótese de procurar outra equipa. ') + esc(g.opp) + ' é avisado.</p><div class="gf"><button type="button" class="btn bad sm" data-act="cancelok" data-id="' + g.id + '">Confirmar desistência</button><button type="button" class="btn ghost sm" data-act="cancel" data-id="' + g.id + '">Voltar</button></div></div>';
+    }
+    return '<article class="card game"><div class="gh">' + dtile(d) + '<div>' + pill + '<h3>' + title + '</h3><p class="meta">' + meta + '</p></div></div>' + body + '<div class="gf">' + actions + '</div></article>';
+  }
+  function panelJogos() {
+    var list = state.games.slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    if (!list.length) return '<div class="card empty"><p>Ainda não tens jogos. Aceita um desafio ou publica o teu.</p><button type="button" class="btn sm" data-act="tab" data-id="desafios">Ver desafios</button></div>';
+    return list.map(gameCard).join('');
+  }
+
+  /* painel: campos */
+  function panelCampos() {
+    return FIELD_LIST.map(function (id) {
+      var f = FIELDS[id];
+      var nx = state.games.filter(function (g) { return g.field === id; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; })[0];
+      return '<article class="card field"><div><h3>' + esc(f.name) + '</h3><p class="meta">Zona: ' + esc(f.zona) + '</p></div>' +
+        '<div class="tags"><span class="pill ' + (f.custo ? 'warn' : 'ok') + '">' + (f.custo ? mt(f.custo) + ' por jogo' : 'Sem custo') + '</span>' + (f.antecipado ? '<span class="pill bad">Pagamento antecipado</span>' : '') + '</div>' +
+        '<p class="note">Autoriza: ' + esc(f.autoriza) + '. ' + esc(f.aviso) + '</p>' +
+        (nx ? '<p class="meta">O teu próximo jogo aqui: ' + esc(short(parse(nx.date))) + ', ' + esc(nx.time) + '.</p>' : '') +
+        '<div class="gf"><button type="button" class="btn ghost sm" data-act="copyreq" data-f="' + id + '">Copiar pedido de autorização</button></div></article>';
+    }).join('') + '<p class="hint" style="font-size:13.5px;color:var(--muted)">Custos e regras de exemplo. Corrige com os valores reais de cada campo.</p>';
+  }
+
+  /* painel: equipas */
+  function panelEquipas() {
+    var list = TEAMS.filter(function (t) { return state.fE === 'Todos' || t.escalao === state.fE; })
+      .slice().sort(function (a, b) { return b.fair - a.fair; });
+    var h = '<div class="bar-tools">' + chips(['Todos'].concat(ESC), state.fE, 'fE') + '</div>';
+    h += list.map(function (t) {
+      var fa = t.id === 'me' ? ME.faltas : t.faltas;
+      return '<article class="card team"><div><h3>' + esc(t.name) + (t.id === 'me' ? '<span class="pill ok me-tag">A tua equipa</span>' : '') + '</h3>' +
+        '<p class="meta">' + esc(t.bairro) + ' · ' + esc(t.escalao) + ' · ' + t.jogos + ' jogos · ' + falta(fa) + '</p>' +
+        '<div class="fpline"><span class="fp"><span style="width:' + Math.round(t.fair / 5 * 100) + '%"></span></span><span>Fair-play ' + fp(t.fair) + ' de 5</span></div></div>' +
+        (t.id === 'me' ? '' : '<button type="button" class="btn ghost sm" data-act="invite" data-id="' + t.id + '">Desafiar</button>') + '</article>';
+    }).join('');
+    return h + '<p class="hint" style="font-size:13.5px;color:var(--muted)">Reputação de exemplo. Depois de cada jogo, as duas equipas avaliam pontualidade, fair-play e cumprimento do combinado.</p>';
+  }
+
+  function copybox() {
+    if (!ui.box) return '';
+    return '<section class="card copybox"><h2 class="sec-h">' + esc(ui.box.label) + '</h2><textarea id="copyTa" readonly>' + esc(ui.box.text) + '</textarea><div class="fa"><button type="button" class="btn ghost sm" data-act="closebox">Fechar</button></div></section>';
+  }
+  function footer() {
+    return '<div class="foot"><p>Protótipo com dados de exemplo. Nada é enviado a outras equipas. O que registares fica guardado só neste navegador.</p><div><button type="button" class="link" data-act="reset">Repor dados de exemplo</button></div></div>';
+  }
+
+  function fkey() {
+    var a = document.activeElement;
+    if (!a || a === document.body || !a.dataset) return null;
+    if (a.id) return '#' + a.id;
+    var s = '';
+    ['act', 'id', 'p', 'v', 'm', 'f'].forEach(function (k) { if (a.dataset[k] !== undefined) s += '[data-' + k + '="' + String(a.dataset[k]).replace(/"/g, '\\"') + '"]'; });
+    return s || null;
+  }
+  function render() {
+    var k = fkey();
+    var panel = state.tab === 'desafios' ? panelDesafios() : state.tab === 'jogos' ? panelJogos() : state.tab === 'campos' ? panelCampos() : panelEquipas();
+    app.innerHTML = header() + '<main class="wrap main">' + attention() + tabs() + copybox() + '<div class="panel" role="tabpanel">' + panel + '</div>' + footer() + '</main>';
+    if (k) { try { var el = app.querySelector(k); if (el) el.focus({ preventScroll: true }); } catch (e) {} }
+  }
+
+  /* acções */
+  function game(id) { return state.games.filter(function (g) { return g.id === id; })[0]; }
+  function copy(text, label) {
+    function fallback() { ui.box = { text: text, label: label }; render(); toast('Seleciona o texto e copia'); setTimeout(function () { var ta = document.getElementById('copyTa'); if (ta) { ta.scrollIntoView({ block: 'center' }); ta.focus(); ta.select(); } }, 0); }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(function () { toast(label + ' copiado'); }).catch(fallback); } else fallback();
+  }
+  function msgFor(g) {
+    var f = FIELDS[g.field] || FIELDS.tbd, c = count(g), l = [];
+    l.push('Jogo marcado: ' + ME.name + ' vs ' + g.opp);
+    l.push(long(parse(g.date)) + ', ' + g.time + (g.field === 'tbd' ? ' (campo por definir)' : ''));
+    if (g.field !== 'tbd') l.push('Local: ' + f.name);
+    l.push('Confirmados: ' + c + ' de 11' + (c < 11 ? '. Faltam ' + (11 - c) + '. Responde "Vou" ou "Não vou".' : '.'));
+    if (f.custo > 0) l.push('Campo: ' + mt(f.custo) + ' no total, ' + mt(share(f)) + ' por equipa' + (f.antecipado ? ', a pagar até ' + short(payDue(g)) + '.' : ', no dia.'));
+    return l.join('\n');
+  }
+  function reqFor(f, g) {
+    var data = g ? long(parse(g.date)) + ', às ' + g.time : '[data], às [hora]';
+    var opp = g && g.opp ? g.opp : '[equipa adversária]';
+    return 'Exmo(a). Senhor(a) ' + f.autoriza + ',\n\nA equipa ' + ME.name + ', do bairro Unidade 7, pede autorização para realizar um jogo amigável de futebol.\n\nLocal: ' + f.name + '\nData: ' + data + '\nAdversário: ' + opp + '\n\nParticipam jovens do bairro. Comprometemo-nos a respeitar as regras da instituição e a deixar o espaço em ordem.\n\nCom os melhores cumprimentos,\n' + ME.name;
+  }
+
+  function accept(id) {
+    var c = state.challenges.filter(function (x) { return x.id === id; })[0];
+    if (!c) return;
+    var t = team(c.team);
+    if (state.games.some(function (g) { return g.date === c.date && g.status === 'confirmado'; })) { toast('Já tens um jogo marcado nesse dia.'); return; }
+    var open = state.games.filter(function (g) { return g.date === c.date && (g.status === 'aberto' || g.status === 'convite'); })[0];
+    var merged = !!open;
+    if (open) { open.status = 'confirmado'; open.opp = t.name; open.oppBairro = t.bairro; open.time = c.time; open.field = c.field; open.auth = false; open.oppPaid = false; open.myPaid = null; open.rsvp = open.rsvp || {}; }
+    else state.games.push({ id: uid(), opp: t.name, oppBairro: t.bairro, date: c.date, time: c.time, field: c.field, status: 'confirmado', auth: false, oppPaid: false, myPaid: null, rsvp: {} });
+    state.challenges = state.challenges.filter(function (x) { return x.id !== id; });
+    state.tab = 'jogos'; save(); render();
+    toast(merged ? 'Desafio aceite. O teu jogo aberto está fechado com ' + t.name + '.' : 'Desafio aceite. Jogo marcado com ' + t.name + '.');
+    window.scrollTo(0, 0);
+  }
+
+  function submitForm() {
+    var dr = ui.draft, t = ui.form.target ? team(ui.form.target) : null;
+    var date = dr.date !== undefined ? dr.date : iso(addDays(nextSat(), 7));
+    var time = dr.time !== undefined ? dr.time : '15:00';
+    var fld = dr.field || 'tbd', esc_ = t ? t.escalao : (dr.esc || ME.escalao);
+    if (!date || date < iso(addDays(today(), 1))) { ui.err = 'Escolhe uma data a partir de amanhã.'; return render(); }
+    if (!time) { ui.err = 'Indica a hora do jogo.'; return render(); }
+    if (state.games.some(function (g) { return g.date === date; })) { ui.err = 'Já tens um jogo ou desafio nesse dia.'; return render(); }
+    var g = { id: uid(), date: date, time: time, field: fld, auth: false, oppPaid: false, myPaid: null, rsvp: {}, note: dr.note || '' };
+    if (t) { g.opp = t.name; g.oppBairro = t.bairro; g.status = 'convite'; }
+    else { g.opp = ''; g.oppBairro = ''; g.status = 'aberto'; g.escalao = esc_; }
+    state.games.push(g); ui.form = { open: false, target: null }; ui.draft = {}; ui.err = ''; state.tab = 'jogos'; save(); render();
+    toast(t ? 'Convite enviado a ' + t.name + '.' : 'Desafio publicado no mural.');
+    window.scrollTo(0, 0);
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]');
+    if (!b) return;
+    var a = b.dataset.act, id = b.dataset.id, g;
+    switch (a) {
+      case 'tab': state.tab = id; save(); render(); break;
+      case 'fD': state.fD = id; save(); render(); break;
+      case 'fE': state.fE = id; save(); render(); break;
+      case 'seefor': state.tab = 'desafios'; state.fD = 'Todos'; save(); render(); break;
+      case 'openform': ui.form = { open: true, target: null }; ui.err = ''; render(); setTimeout(function () { var el = document.getElementById('chForm'); if (el) el.scrollIntoView({ block: 'center' }); }, 0); break;
+      case 'closeform': ui.form = { open: false, target: null }; ui.err = ''; render(); break;
+      case 'invite': ui.form = { open: true, target: id }; ui.err = ''; state.tab = 'desafios'; render(); setTimeout(function () { var el = document.getElementById('chForm'); if (el) el.scrollIntoView({ block: 'center' }); }, 0); break;
+      case 'accept': accept(id); break;
+      case 'auth': g = game(id); if (g) { g.auth = true; save(); render(); toast('Autorização registada.'); } break;
+      case 'unauth': g = game(id); if (g) { g.auth = false; save(); render(); } break;
+      case 'pay': ui.pay[id] = !ui.pay[id]; render(); break;
+      case 'paid': g = game(id); if (g) { g.myPaid = b.dataset.m; ui.pay[id] = false; save(); render(); toast('Pagamento registado. A equipa adversária vê que pagaste.'); } break;
+      case 'unpay': g = game(id); if (g) { g.myPaid = null; save(); render(); } break;
+      case 'roster': ui.roster[id] = !ui.roster[id]; render(); break;
+      case 'rsvp': g = game(id); if (g) { var p = b.dataset.p, v = b.dataset.v; g.rsvp[p] = g.rsvp[p] === v ? null : v; save(); render(); } break;
+      case 'copymsg': g = game(id); if (g) copy(msgFor(g), 'Mensagem'); break;
+      case 'copyreq':
+        if (b.dataset.f) { var nxt = state.games.filter(function (x) { return x.field === b.dataset.f && x.status === 'confirmado'; })[0]; copy(reqFor(FIELDS[b.dataset.f], nxt), 'Pedido de autorização'); }
+        else { g = game(id); if (g) copy(reqFor(FIELDS[g.field], g), 'Pedido de autorização'); }
+        break;
+      case 'cancel': ui.cancel[id] = !ui.cancel[id]; render(); break;
+      case 'cancelok':
+        g = game(id);
+        if (g) {
+          var late = nDays(g) <= 2;
+          state.games = state.games.filter(function (x) { return x.id !== id; });
+          if (late) { state.meFaltas = (state.meFaltas || 0) + 1; ME.faltas = state.meFaltas; }
+          save(); render(); toast(g.opp + ' foi avisado.' + (late ? ' Falta registada.' : ''));
+        }
+        break;
+      case 'withdraw': state.games = state.games.filter(function (x) { return x.id !== id; }); save(); render(); toast('Retirado.'); break;
+      case 'sim':
+        g = game(id);
+        if (g) { g.status = 'confirmado'; save(); render(); toast(g.opp + ' aceitou o convite.'); }
+        break;
+      case 'closebox': ui.box = null; render(); break;
+      case 'reset': try { localStorage.removeItem(KEY); } catch (er) {} state = seed(); ME.faltas = 0; ui = { form: { open: false, target: null }, draft: {}, err: '', pay: {}, roster: {}, cancel: {}, box: null }; render(); toast('Dados de exemplo repostos.'); break;
+    }
+  });
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.dataset && t.dataset.sf) {
+      var g = game(t.dataset.sf);
+      if (g && t.value) { g.field = t.value; save(); render(); toast('Campo definido: ' + FIELDS[t.value].name + '.'); }
+    }
+  });
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (t.form && t.form.id === 'chForm' && t.name) ui.draft[t.name] = t.value;
+  });
+  document.addEventListener('submit', function (e) {
+    if (e.target.id === 'chForm') { e.preventDefault(); submitForm(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
